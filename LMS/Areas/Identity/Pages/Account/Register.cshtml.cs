@@ -194,7 +194,73 @@ namespace LMS.Areas.Identity.Pages.Account
         /// <returns>The uID of the new user</returns>
         string CreateNewUser( string firstName, string lastName, DateTime DOB, string departmentAbbrev, string role )
         {
-            return "unknown";
+            var adminUID = from a in db.Administrators
+                         orderby a.UId descending
+                         select a.UId;
+
+            var studentUID = from a in db.Students
+                             orderby a.UId descending
+                             select a.UId;
+
+            var profUID = from a in db.Professors
+                             orderby a.UId descending
+                             select a.UId;
+            
+            string max = adminUID.First();
+            
+            if (studentUID.First().CompareTo(max) > 0 ) 
+                max = studentUID.First();
+
+            if (profUID.First().CompareTo(max) > 0)
+                max = profUID.First();
+
+            int number = int.Parse(max.Substring(1));
+            number++;
+
+            string uID = "u" + number.ToString("D7");
+
+            if (role == "Administrator")
+            {
+                Administrator administrator = new Administrator();
+
+                administrator.UId = uID;
+                administrator.FirstName = firstName;
+                administrator.LastName = lastName;
+                administrator.DoB = DateOnly.FromDateTime(DOB);
+
+                db.Administrators.Add(administrator);
+                db.SaveChanges();
+            }
+
+            else if (role == "Professor")
+            {
+                Professor professor = new Professor();
+
+                professor.UId = uID;
+                professor.FirstName = firstName;
+                professor.LastName = lastName;
+                professor.DoB = DateOnly.FromDateTime(DOB);
+                professor.Dept = departmentAbbrev;
+
+                db.Professors.Add(professor);
+                db.SaveChanges();
+            }
+
+            else
+            {
+                Student student = new Student();
+
+                student.UId = uID;
+                student.FirstName = firstName;
+                student.LastName = lastName;
+                student.DoB = DateOnly.FromDateTime(DOB);
+                student.Major = departmentAbbrev;
+
+                db.Students.Add(student);
+                db.SaveChanges();
+            } 
+
+            return uID;
         }
 
         /*******End code to modify********/
