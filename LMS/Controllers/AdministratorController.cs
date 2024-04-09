@@ -51,15 +51,25 @@ namespace LMS.Controllers
         /// false if the department already exists, true otherwise.</returns>
         public IActionResult CreateDepartment(string subject, string name)
         {
-            Department department = new Department();
+            
+            try
+            {
+                Department department = new Department();
 
-            department.Name = name;
-            department.Subject = subject;
+                department.Name = name;
+                department.Subject = subject;
 
-            db.Departments.Add(department);
-            db.SaveChanges();
+                db.Departments.Add(department);
 
-            return Json(new { success = true});
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+            
+            catch (Exception)
+            {
+                return Json(new { success = false });
+            }
         }
 
 
@@ -121,16 +131,25 @@ namespace LMS.Controllers
         /// false if the course already exists, true otherwise.</returns>
         public IActionResult CreateCourse(string subject, int number, string name)
         {           
-            Course course = new Course();
+            try
+            {
+                Course course = new Course();
 
-            course.CourseNo = (ushort) number;
-            course.Subject = subject;
-            course.CourseName = name;
+                course.CourseNo = (ushort)number;
+                course.Subject = subject;
+                course.CourseName = name;
 
-            db.Courses.Add(course);
-            db.SaveChanges();
+                db.Courses.Add(course);
+                db.SaveChanges();
 
-            return Json(new { success = true });
+                return Json(new { success = true });
+            }
+
+            catch
+            {
+                return Json(new { success = false });
+            }
+            
         }
 
         /// <summary>
@@ -151,22 +170,34 @@ namespace LMS.Controllers
         /// true otherwise.</returns>
         public IActionResult CreateClass(string subject, int number, string season, int year, DateTime start, DateTime end, string location, string instructor)
         {
-            var id =
+            try
+            {
+                var id =
                 from c in db.Courses
                 where c.Subject == subject && c.CourseNo == number
                 select c.CourseId;
 
-            Class classes = new Class();
+                Class classes = new Class();
 
-            classes.Year = year;
-            classes.Season = season;
-            classes.Location = location;
-            classes.ProfId = instructor;
-            classes.StartTime = TimeOnly.FromDateTime(start);
-            classes.EndTime = TimeOnly.FromDateTime(end);
-            classes.CourseId = id.First();
+                classes.Year = year;
+                classes.Season = season;
+                classes.Location = location;
+                classes.ProfId = instructor;
+                classes.StartTime = TimeOnly.FromDateTime(start);
+                classes.EndTime = TimeOnly.FromDateTime(end);
+                classes.CourseId = id.First();
 
-            return Json(new { success = true });
+                db.Classes.Add(classes);
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+
+            catch (Exception)
+            {
+                return Json(new { success = false });
+            }
+            
         }
 
 
