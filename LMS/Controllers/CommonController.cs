@@ -223,8 +223,8 @@ namespace LMS.Controllers
 
             if (adminQuery.Count() <= 0)
             {
-                var profQuery =
-                    from p in db.Professors
+                var studentProfQuery =
+                    (from p in db.Professors
                     where p.UId == uid
                     select new
                     {
@@ -232,28 +232,21 @@ namespace LMS.Controllers
                         lname = p.LastName,
                         uid = p.UId,
                         department = p.Dept
-                    };
-
-                if (profQuery.Count() <= 0)
+                    }).Union(from s in db.Students
+                             where s.UId == uid
+                             select new
+                             {
+                                 fname = s.FirstName,
+                                 lname = s.LastName,
+                                 uid = s.UId,
+                                 department = s.Major
+                             });
+                if (studentProfQuery.Count() <= 0)
                 {
-                    var studentQuery =
-                    from s in db.Students
-                    where s.UId == uid
-                    select new
-                    {
-                        fname = s.FirstName,
-                        lname = s.LastName,
-                        uid = s.UId,
-                        department = s.Major
-                    };
-
-                    if (studentQuery.Count() <= 0)
-                    {
-                        return Json(new { success = false });
-                    }
-                    return Json(studentQuery.ToArray()[0]);
+                    return Json(new { success = false });
                 }
-                return Json(profQuery.ToArray()[0]);
+                
+                return Json(studentProfQuery.ToArray()[0]);
             }
             return Json(adminQuery.ToArray()[0]);
         }
