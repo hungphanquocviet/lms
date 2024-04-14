@@ -185,6 +185,10 @@ namespace LMS.Controllers
 
                 select s.Content;
 
+            if (query.Count() <= 0)
+            {
+                return Content("");
+            }
             return Content(query.First());
         }
 

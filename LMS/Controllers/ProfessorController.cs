@@ -126,7 +126,7 @@ namespace LMS_CustomIdentity.Controllers
                 join c in db.Classes
                 on co.CourseId equals c.CourseId
                 where c.Season == season && c.Year == year
-
+               
                 join e in db.Enrolls
                 on c.ClassId equals e.ClassId
 
@@ -165,6 +165,31 @@ namespace LMS_CustomIdentity.Controllers
         /// <returns>The JSON array</returns>
         public IActionResult GetAssignmentsInCategory(string subject, int num, string season, int year, string category)
         {
+            if (category == null)
+            {
+                var query1 =
+                from co in db.Courses
+                where co.Subject == subject && co.CourseNo == num
+
+                join c in db.Classes
+                on co.CourseId equals c.CourseId
+                where c.Season == season && c.Year == year
+
+                join ac in db.AssignCategories
+                on c.ClassId equals ac.ClassId
+
+                join a in db.Assignments
+                on ac.CategoryId equals a.CategoryId
+
+                select new
+                {
+                    aname = a.Name,
+                    cname = ac.Category,
+                    due = a.DueDate,
+                    submissions = a.Submissions.Count(),
+                };
+                return Json(query1.ToArray());
+            }
             var query =
                 from co in db.Courses
                 where co.Subject == subject && co.CourseNo == num

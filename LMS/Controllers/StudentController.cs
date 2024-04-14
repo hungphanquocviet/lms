@@ -134,15 +134,16 @@ namespace LMS.Controllers
                 on ac.CategoryId equals a.CategoryId
 
                 join s in db.Submissions
-                on a.AssignId equals s.AssignId
-                where s.StudentId == uid
+                on e.StudentId equals s.StudentId
+                into right
 
+                from j in right.DefaultIfEmpty()
                 select new
                 {
                     aname = a.Name,
                     cname = ac.Category,
                     due = a.DueDate,
-                    score = s == null ? null : (uint?)s.Score,
+                    score = j == null ? null : (uint?)j.Score,
                 };
             return Json(query.ToArray());
         }
@@ -347,6 +348,8 @@ namespace LMS.Controllers
                 classCount++;
             }
 
+            if (total ==  0.0)
+                return Json(new { gpa = 0.0 });
             average = total / classCount;
             return Json(new { gpa = average});
         }
