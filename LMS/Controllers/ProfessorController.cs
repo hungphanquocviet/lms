@@ -311,7 +311,7 @@ namespace LMS_CustomIdentity.Controllers
                 db.Assignments.Add(assignment);
 
                 var students =
-                    from co in db.Courses
+                    (from co in db.Courses
                     where co.Subject == subject && co.CourseNo == num
 
                     join c in db.Classes
@@ -321,15 +321,35 @@ namespace LMS_CustomIdentity.Controllers
                     join e in db.Enrolls
                     on c.ClassId equals e.ClassId
 
-                    select e;
-
+                    select e).ToArray();
+                List<string> grades = new();
                 foreach ( var student in students )
                 {
+                    grades.Add(calculateGrade(subject, num, season, year, student.StudentId));
+                }
+
+                var studentsQuery =
+                     from co in db.Courses
+                     where co.Subject == subject && co.CourseNo == num
+
+                     join c in db.Classes
+                     on co.CourseId equals c.CourseId
+                     where c.Season == season && c.Year == year
+
+                     join e in db.Enrolls
+                     on c.ClassId equals e.ClassId
+
+                     select e;
+                int index = 0;
+                foreach (var student in students)
+                {
                     Enroll currentStudent = student;
-                    if (currentStudent != null)
+                    if (student != null)
                     {
-                        currentStudent.Grade = calculateGrade(subject, num, season, year, currentStudent.StudentId);
+                        currentStudent.Grade = grades[index];
                     }
+
+                    index++;
                 }
                 db.SaveChanges();
 
@@ -344,8 +364,9 @@ namespace LMS_CustomIdentity.Controllers
 
         private string calculateGrade(string subject, int num, string season, int year, string uid)
         {
+            // Get categories
             var queryAssignCategory =
-                from co in db.Courses
+                (from co in db.Courses
                 where co.Subject == subject && co.CourseNo == num
 
                 join c in db.Classes
@@ -355,18 +376,26 @@ namespace LMS_CustomIdentity.Controllers
                 join ac in db.AssignCategories
                 on c.ClassId equals ac.ClassId
                 
-                select ac;
-            double scaledGrade = 0;
+                select ac).ToArray();
+            double totalScore = 0;
             double categoryWeightSum = 0;
 
+            // For each categories
             foreach ( var ac in queryAssignCategory )
             {
-                categoryWeightSum += ac.GradeWeight;
+                
                 var queryAssignment =
-                    from a in db.Assignments
+                    (from a in db.Assignments
                     where ac.CategoryId == a.CategoryId
-                    select a;
+                    select a).ToArray();
+
                 if (queryAssignment.Count() <= 0) continue;
+
+                // Calculate the total weight sum
+                categoryWeightSum += ac.GradeWeight;
+
+                
+                // For each assignment in the assignment categories
                 double maxAssignmentScore = 0;
                 double studentAssignmentScore = 0;
                 foreach ( var assignment in queryAssignment )
@@ -374,21 +403,21 @@ namespace LMS_CustomIdentity.Controllers
                     maxAssignmentScore += assignment.MaxPts;
                     
                     var submissions =
-                        from s in db.Submissions
+                        (from s in db.Submissions
                         where assignment.AssignId == s.AssignId && uid == s.StudentId
-                        select s.Score;
+                        select s.Score).ToArray();
 
                     if (submissions.Count() <= 0) continue;
                     studentAssignmentScore += submissions.First();
                 }
-                scaledGrade += (studentAssignmentScore / maxAssignmentScore) * ac.GradeWeight;
+                totalScore += (studentAssignmentScore / maxAssignmentScore) * ac.GradeWeight;
             }
 
             double scalingFactor = 100 / categoryWeightSum;
-            double totalGrade = scaledGrade * scalingFactor;
+            double finalScore = totalScore * scalingFactor;
 
 
-            return toLetterGrade(totalGrade);
+            return toLetterGrade(finalScore);
         }
 
         private string toLetterGrade(double grade )
