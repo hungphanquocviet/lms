@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using LMS.Models.LMSModels;
 using Microsoft.AspNetCore.Authorization;
@@ -117,7 +118,7 @@ namespace LMS.Controllers
         {
             var query =
                 from e in db.Enrolls
-                where e.StudentId == uid
+                where uid == e.StudentId
 
                 join c in db.Classes
                 on e.ClassId equals c.ClassId
@@ -133,22 +134,20 @@ namespace LMS.Controllers
                 join a in db.Assignments
                 on ac.CategoryId equals a.CategoryId
 
-                join s in db.Submissions
-                on e.StudentId equals s.StudentId
-                into right
-
-                from j in right.DefaultIfEmpty()
                 select new
                 {
                     aname = a.Name,
                     cname = ac.Category,
                     due = a.DueDate,
-                    score = j == null ? null : (uint?)j.Score,
+                    score = (from s in a.Submissions
+                             where s.StudentId == uid
+                             select s.Score).FirstOrDefault()
                 };
+            
             return Json(query.ToArray());
         }
 
-
+        
 
         /// <summary>
         /// Adds a submission to the given assignment for the given student
@@ -186,6 +185,7 @@ namespace LMS.Controllers
 
                 join a in db.Assignments
                 on ac.CategoryId equals a.CategoryId
+                where a.Name == asgname
 
                 join s in db.Submissions
                 on a.AssignId equals s.AssignId
@@ -216,7 +216,7 @@ namespace LMS.Controllers
 
                         join a in db.Assignments
                         on ac.CategoryId equals a.CategoryId
-
+                        where a.Name == asgname
                         select a.AssignId;
 
                     submission = new Submission();
@@ -301,7 +301,7 @@ namespace LMS.Controllers
                 where e.StudentId == uid
                 select e.Grade;
             double average = 0.0;
-            if (query.Count() <= 0)
+            if (query.ToArray().Count() <= 0)
             {
                 return Json(new {gpa = 0.0});
             }

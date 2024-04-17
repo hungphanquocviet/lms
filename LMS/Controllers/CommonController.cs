@@ -221,7 +221,7 @@ namespace LMS.Controllers
                     uid = a.UId,
                 };
 
-            if (adminQuery.Count() <= 0)
+            if (adminQuery.ToArray().Count() <= 0)
             {
                 var studentProfQuery =
                     (from p in db.Professors
@@ -241,7 +241,7 @@ namespace LMS.Controllers
                                  uid = s.UId,
                                  department = s.Major
                              });
-                if (studentProfQuery.Count() <= 0)
+                if (studentProfQuery.ToArray().Count() <= 0)
                 {
                     return Json(new { success = false });
                 }

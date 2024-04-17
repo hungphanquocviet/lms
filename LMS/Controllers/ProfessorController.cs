@@ -309,6 +309,7 @@ namespace LMS_CustomIdentity.Controllers
                 assignment.DueDate = asgdue;
 
                 db.Assignments.Add(assignment);
+                db.SaveChanges();
 
                 var students =
                     (from co in db.Courses
@@ -322,6 +323,7 @@ namespace LMS_CustomIdentity.Controllers
                     on c.ClassId equals e.ClassId
 
                     select e).ToArray();
+
                 List<string> grades = new();
                 foreach ( var student in students )
                 {
@@ -422,7 +424,7 @@ namespace LMS_CustomIdentity.Controllers
 
         private string toLetterGrade(double grade )
         {
-            if (grade <= 100 && grade >= 93)
+            if (grade >= 93)
             {
                 return "A";
             }
@@ -570,6 +572,9 @@ namespace LMS_CustomIdentity.Controllers
                 {
                     submission.Score = (uint) score;
                 }
+
+                db.SaveChanges();
+
                 var students =
                     from co in db.Courses
                     where co.Subject == subject && co.CourseNo == num
