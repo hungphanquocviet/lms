@@ -364,116 +364,6 @@ namespace LMS_CustomIdentity.Controllers
             }
         }
 
-        private string calculateGrade(string subject, int num, string season, int year, string uid)
-        {
-            // Get categories
-            var queryAssignCategory =
-                (from co in db.Courses
-                where co.Subject == subject && co.CourseNo == num
-
-                join c in db.Classes
-                on co.CourseId equals c.CourseId
-                where c.Season == season && c.Year == year
-
-                join ac in db.AssignCategories
-                on c.ClassId equals ac.ClassId
-                
-                select ac).ToArray();
-            double totalScore = 0;
-            double categoryWeightSum = 0;
-
-            // For each categories
-            foreach ( var ac in queryAssignCategory )
-            {
-                
-                var queryAssignment =
-                    (from a in db.Assignments
-                    where ac.CategoryId == a.CategoryId
-                    select a).ToArray();
-
-                if (queryAssignment.Count() <= 0) continue;
-
-                // Calculate the total weight sum
-                categoryWeightSum += ac.GradeWeight;
-
-                
-                // For each assignment in the assignment categories
-                double maxAssignmentScore = 0;
-                double studentAssignmentScore = 0;
-                foreach ( var assignment in queryAssignment )
-                {
-                    maxAssignmentScore += assignment.MaxPts;
-                    
-                    var submissions =
-                        (from s in db.Submissions
-                        where assignment.AssignId == s.AssignId && uid == s.StudentId
-                        select s.Score).ToArray();
-
-                    if (submissions.Count() <= 0) continue;
-                    studentAssignmentScore += submissions.First();
-                }
-                totalScore += (studentAssignmentScore / maxAssignmentScore) * ac.GradeWeight;
-            }
-
-            double scalingFactor = 100 / categoryWeightSum;
-            double finalScore = totalScore * scalingFactor;
-
-
-            return toLetterGrade(finalScore);
-        }
-
-        private string toLetterGrade(double grade )
-        {
-            if (grade >= 93)
-            {
-                return "A";
-            }
-            else if (grade < 93 && grade >= 90)
-            {
-                return "A-";
-            }
-            else if (grade < 90 && grade >= 87)
-            {
-                return "B+";
-            }
-            else if (grade < 87 && grade >= 83)
-            {
-                return "B";
-            }
-            else if (grade < 83 && grade >= 80)
-            {
-                return "B-";
-            }
-            else if (grade < 80 && grade >= 77)
-            {
-                return "C+";
-            }
-            else if (grade < 77 && grade >= 73)
-            {
-                return "C";
-            }
-            else if (grade < 73 && grade >= 70)
-            {
-                return "C-";
-            }
-            else if (grade < 70 && grade >= 67)
-            {
-                return "D+";
-            }
-            else if (grade < 67 && grade >= 63)
-            {
-                return "D";
-            }
-            else if (grade < 63 && grade >= 60)
-            {
-                return "D-";
-            }
-            else
-            {
-                return "E";
-            }
-        }
-
         /// <summary>
         /// Gets a JSON array of all the submissions to a certain assignment.
         /// Each object in the array should have the following fields:
@@ -639,7 +529,129 @@ namespace LMS_CustomIdentity.Controllers
             return Json(query.ToArray());
         }
 
+        /// <summary>
+        /// Helper method to calculate the grade
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="num"></param>
+        /// <param name="season"></param>
+        /// <param name="year"></param>
+        /// <param name="uid"></param>
+        /// <returns></returns>
+        private string calculateGrade(string subject, int num, string season, int year, string uid)
+        {
+            // Get categories
+            var queryAssignCategory =
+                (from co in db.Courses
+                 where co.Subject == subject && co.CourseNo == num
 
+                 join c in db.Classes
+                 on co.CourseId equals c.CourseId
+                 where c.Season == season && c.Year == year
+
+                 join ac in db.AssignCategories
+                 on c.ClassId equals ac.ClassId
+
+                 select ac).ToArray();
+            double totalScore = 0;
+            double categoryWeightSum = 0;
+
+            // For each categories
+            foreach (var ac in queryAssignCategory)
+            {
+
+                var queryAssignment =
+                    (from a in db.Assignments
+                     where ac.CategoryId == a.CategoryId
+                     select a).ToArray();
+
+                if (queryAssignment.Count() <= 0) continue;
+
+                // Calculate the total weight sum
+                categoryWeightSum += ac.GradeWeight;
+
+
+                // For each assignment in the assignment categories
+                double maxAssignmentScore = 0;
+                double studentAssignmentScore = 0;
+                foreach (var assignment in queryAssignment)
+                {
+                    maxAssignmentScore += assignment.MaxPts;
+
+                    var submissions =
+                        (from s in db.Submissions
+                         where assignment.AssignId == s.AssignId && uid == s.StudentId
+                         select s.Score).ToArray();
+
+                    if (submissions.Count() <= 0) continue;
+                    studentAssignmentScore += submissions.First();
+                }
+                totalScore += (studentAssignmentScore / maxAssignmentScore) * ac.GradeWeight;
+            }
+
+            double scalingFactor = 100 / categoryWeightSum;
+            double finalScore = totalScore * scalingFactor;
+
+
+            return toLetterGrade(finalScore);
+        }
+
+        /// <summary>
+        /// Helper method to convert the total grade to letter grade
+        /// </summary>
+        /// <param name="grade"></param>
+        /// <returns></returns>
+        private string toLetterGrade(double grade)
+        {
+            if (grade >= 93)
+            {
+                return "A";
+            }
+            else if (grade < 93 && grade >= 90)
+            {
+                return "A-";
+            }
+            else if (grade < 90 && grade >= 87)
+            {
+                return "B+";
+            }
+            else if (grade < 87 && grade >= 83)
+            {
+                return "B";
+            }
+            else if (grade < 83 && grade >= 80)
+            {
+                return "B-";
+            }
+            else if (grade < 80 && grade >= 77)
+            {
+                return "C+";
+            }
+            else if (grade < 77 && grade >= 73)
+            {
+                return "C";
+            }
+            else if (grade < 73 && grade >= 70)
+            {
+                return "C-";
+            }
+            else if (grade < 70 && grade >= 67)
+            {
+                return "D+";
+            }
+            else if (grade < 67 && grade >= 63)
+            {
+                return "D";
+            }
+            else if (grade < 63 && grade >= 60)
+            {
+                return "D-";
+            }
+            else
+            {
+                return "E";
+            }
+        }
 
         /*******End code to modify********/
     }
