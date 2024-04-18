@@ -607,6 +607,7 @@ namespace LMS_CustomIdentity.Controllers
         /// <returns></returns>
         private string toLetterGrade(double grade)
         {
+            // if grade is greater than 93, return A, not neccessary less than 100
             if (grade >= 93)
             {
                 return "A";
