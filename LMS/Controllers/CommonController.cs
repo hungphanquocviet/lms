@@ -251,7 +251,6 @@ namespace LMS.Controllers
             return Json(adminQuery.ToArray()[0]);
         }
 
-
         /*******End code to modify********/
     }
 }

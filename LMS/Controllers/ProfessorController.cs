@@ -325,6 +325,8 @@ namespace LMS_CustomIdentity.Controllers
                     select e).ToArray();
 
                 List<string> grades = new();
+
+                // Add the grades to a temporary list
                 foreach ( var student in students )
                 {
                     grades.Add(calculateGrade(subject, num, season, year, student.StudentId));
@@ -342,6 +344,8 @@ namespace LMS_CustomIdentity.Controllers
                      on c.ClassId equals e.ClassId
 
                      select e;
+
+                // Update student grades
                 int index = 0;
                 foreach (var student in students)
                 {
